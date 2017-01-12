@@ -43,17 +43,19 @@ namespace Microsoft.IdentityModel.Tokens
         private ECDsa _ecdsa;
         private HashAlgorithmName _hashAlgorithm;
         private RSA _rsa;
-#else
+#endif
+
+#if NET451
         private ECDsaCng _ecdsa;
         private string _hashAlgorithm;
         private RSACryptoServiceProvider _rsaCryptoServiceProvider;
+        private RSACryptoServiceProviderProxy _rsaCryptoServiceProviderProxy;
 #endif
         private bool _disposeRsa;
         private bool _disposeEcdsa;
         private bool _disposed;
         private IReadOnlyDictionary<string, int> _minimumAsymmetricKeySizeInBitsForSigningMap;
         private IReadOnlyDictionary<string, int> _minimumAsymmetricKeySizeInBitsForVerifyingMap;
-        private RSACryptoServiceProviderProxy _rsaCryptoServiceProviderProxy;
 
         /// <summary>
         /// Mapping from algorithm to minimum <see cref="AsymmetricSecurityKey"/>.KeySize when creating signatures.
@@ -236,10 +238,11 @@ namespace Microsoft.IdentityModel.Tokens
             {
                 if (willCreateSignatures)
                 {
-                    RSACryptoServiceProvider rsaCsp = x509Key.PrivateKey as RSACryptoServiceProvider;
-                    if (rsaCsp != null)
-                        _rsaCryptoServiceProviderProxy = new RSACryptoServiceProviderProxy(rsaCsp);
-                    else
+                    // is this the correct way to get the RSA for netstandard 1.4 ?
+                    //RSACryptoServiceProvider rsaCsp = x509Key.PrivateKey as RSACryptoServiceProvider;
+                    //if (rsaCsp != null)
+                    //    _rsaCryptoServiceProviderProxy = new RSACryptoServiceProviderProxy(rsaCsp);
+                    //else
                         _rsa = x509Key.PrivateKey as RSA;
                 }
                 else
@@ -282,7 +285,9 @@ namespace Microsoft.IdentityModel.Tokens
 
             throw LogHelper.LogExceptionMessage(new ArgumentOutOfRangeException(nameof(key), String.Format(CultureInfo.InvariantCulture, LogMessages.IDX10641, key)));
         }
-#else
+#endif
+
+#if NET451
         /// <summary>
         /// Returns the algorithm name.
         /// </summary>
@@ -592,11 +597,12 @@ namespace Microsoft.IdentityModel.Tokens
 #if NETSTANDARD1_4
             if (_rsa != null)
                 return _rsa.SignData(input, _hashAlgorithm, RSASignaturePadding.Pkcs1);
-            else if (_rsaCryptoServiceProviderProxy != null)
-                return _rsaCryptoServiceProviderProxy.SignData(input, _hashAlgorithm.Name);
             else if (_ecdsa != null)
                 return _ecdsa.SignData(input, _hashAlgorithm);
-#else
+#endif
+
+#if NET451
+            // TODO should we use the 'proxy' first?
             if (_rsaCryptoServiceProvider != null)
                 return _rsaCryptoServiceProvider.SignData(input, _hashAlgorithm);
             else if (_rsaCryptoServiceProviderProxy != null)
@@ -634,11 +640,12 @@ namespace Microsoft.IdentityModel.Tokens
 #if NETSTANDARD1_4
             if (_rsa != null)
                 return _rsa.VerifyData(input, signature, _hashAlgorithm, RSASignaturePadding.Pkcs1);
-            else if (_rsaCryptoServiceProviderProxy != null)
-                return _rsaCryptoServiceProviderProxy.VerifyData(input, _hashAlgorithm.Name, signature);
             else if (_ecdsa != null)
                 return _ecdsa.VerifyData(input, signature, _hashAlgorithm);
-#else
+#endif
+
+#if NET451
+            // TODO - should we use the 'proxy' first ?
             if (_rsaCryptoServiceProvider != null)
                 return _rsaCryptoServiceProvider.VerifyData(input, _hashAlgorithm, signature);
             else if (_rsaCryptoServiceProviderProxy != null)
@@ -682,15 +689,17 @@ namespace Microsoft.IdentityModel.Tokens
 #if NETSTANDARD1_4
                     if (_rsa != null && _disposeRsa)
                         _rsa.Dispose();
-#else
+#endif
+
+#if NET451
                     if (_rsaCryptoServiceProvider != null && _disposeRsa)
                         _rsaCryptoServiceProvider.Dispose();
-#endif
-                    if (_ecdsa != null && _disposeEcdsa)
-                        _ecdsa.Dispose();
 
                     if (_rsaCryptoServiceProviderProxy != null)
                         _rsaCryptoServiceProviderProxy.Dispose();
+#endif
+                    if (_ecdsa != null && _disposeEcdsa)
+                        _ecdsa.Dispose();
                 }
             }
         }

@@ -126,8 +126,10 @@ namespace Microsoft.IdentityModel.Tokens.Tests
         public static RsaSecurityKey RsaSecurityKey_2048_Public;
         public static RsaSecurityKey RsaSecurityKey_4096;
         public static RsaSecurityKey RsaSecurityKey_4096_Public;
+#if NET451
         public static RsaSecurityKey RsaSecurityKeyWithCspProvider_2048;
         public static RsaSecurityKey RsaSecurityKeyWithCspProvider_2048_Public;
+#endif
         public static RsaSecurityKey RsaSecurityKeyWithCngProvider_2048;
         public static RsaSecurityKey RsaSecurityKeyWithCngProvider_2048_Public;
 
@@ -394,12 +396,6 @@ namespace Microsoft.IdentityModel.Tokens.Tests
             RSASigningCreds_2048_Public = new SigningCredentials(RsaSecurityKey_2048_Public, SecurityAlgorithms.RsaSha256Signature);
             RSASigningCreds_4096 = new SigningCredentials(RsaSecurityKey_2048, SecurityAlgorithms.RsaSha256Signature);
             RSASigningCreds_4096_Public = new SigningCredentials(RsaSecurityKey_2048_Public, SecurityAlgorithms.RsaSha256Signature);
-            var rsaCsp = new RSACryptoServiceProvider();
-            rsaCsp.ImportParameters(RsaParameters_2048);
-            RsaSecurityKeyWithCspProvider_2048 = new RsaSecurityKey(rsaCsp);
-            var rsaCspPublic = new RSACryptoServiceProvider();
-            rsaCspPublic.ImportParameters(RsaParameters_2048_Public);
-            RsaSecurityKeyWithCspProvider_2048_Public = new RsaSecurityKey(rsaCspPublic);
 #if NETCOREAPP1_0
             var rsaCng = new RSACng();
             rsaCng.ImportParameters(RsaParameters_2048);
@@ -409,6 +405,14 @@ namespace Microsoft.IdentityModel.Tokens.Tests
             RsaSecurityKeyWithCngProvider_2048_Public = new RsaSecurityKey(rsaCngPublic);
 #endif
 
+#if NET451
+            var rsaCsp = new RSACryptoServiceProvider();
+            rsaCsp.ImportParameters(RsaParameters_2048);
+            RsaSecurityKeyWithCspProvider_2048 = new RsaSecurityKey(rsaCsp);
+            var rsaCspPublic = new RSACryptoServiceProvider();
+            rsaCspPublic.ImportParameters(RsaParameters_2048_Public);
+            RsaSecurityKeyWithCspProvider_2048_Public = new RsaSecurityKey(rsaCspPublic);
+#endif
             //ecdsa
             byte[] ecdsa256KeyBlob = TestUtilities.HexToByteArray("454353322000000096e476f7473cb17c5b38684daae437277ae1efadceb380fad3d7072be2ffe5f0b54a94c2d6951f073bfc25e7b81ac2a4c41317904929d167c3dfc99122175a9438e5fb3e7625493138d4149c9438f91a2fecc7f48f804a92b6363776892ee134");
             byte[] ecdsa384KeyBlob = TestUtilities.HexToByteArray("45435334300000009dc6bb9cdc8dac31e3db6e6b5f58f8e3a304e5c08e632705ca9a236f1134646dca526b89f7ea98653962f4a781f2fc9bf479a2d627561b1269548050e6d2c388018b837f4ceba8ee7fe2eefea67c8418ad1e84f60c1309385e573ea5183e9ae8b6d5308a78da207c6e556af2053983321a5f8ac057b787089ee783c99093b9f2afb2f9a1e9a560ad3095b9667aa699fa");
